@@ -11,6 +11,7 @@ RUN apt update --fix-missing && \
     apt install -y software-properties-common && \
     add-apt-repository ppa:ondrej/php && \
     apt install -y \
+        git \
         nginx \
         php${PHP_VERSION} \
         php${PHP_VERSION}-bcmath \
@@ -36,12 +37,16 @@ RUN apt update --fix-missing && \
         php${PHP_VERSION}-sqlite3 \
         php${PHP_VERSION}-xml \
         php${PHP_VERSION}-zip \
+        sudo \
         rsync \
         unzip \
         vim \
         zip && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
+
+RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
+    && chmod 0440 /etc/sudoers.d/www-data
 
 # PHP config
 COPY php/fpm/php.ini /etc/php/${PHP_VERSION}/fpm/php.ini
@@ -72,8 +77,13 @@ EXPOSE 80
 
 WORKDIR /var/www/html
 
+RUN chown -R www-data:www-data /var/www
+RUN mkdir -p /run/php/
+RUN touch /run/php/php-fpm.sock
+RUN chown -R www-data:www-data /run/php/
+
+USER www-data
 STOPSIGNAL SIGTERM
 
 # Start PHP-FPM and Nginx
-CMD ["/bin/bash", "-c", "php-fpm${PHP_VERSION} -R && nginx -g 'daemon off;'"]
-
+CMD ["/bin/bash", "-c", "php-fpm${PHP_VERSION} -R && sudo nginx -g 'daemon off;'"]
