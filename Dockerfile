@@ -65,7 +65,7 @@ COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
 COPY nginx/mime.types /etc/nginx/mime.types
 COPY nginx/conf.d/ /etc/nginx/conf.d/
-COPY nginx/sites-enabled/www. /etc/nginx/sites-enabled/default
+COPY nginx/sites-enabled/default.conf /etc/nginx/sites-enabled/default
 RUN rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
