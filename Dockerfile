@@ -47,6 +47,10 @@ RUN apt update --fix-missing && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
+# Ensure www-data has UID 33 and GID 33
+RUN usermod -u 33 www-data && \
+    groupmod -g 33 www-data
+
 RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
     && chmod 0440 /etc/sudoers.d/www-data
 
