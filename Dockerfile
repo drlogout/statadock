@@ -65,7 +65,9 @@ COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
 COPY nginx/mime.types /etc/nginx/mime.types
 COPY nginx/conf.d/ /etc/nginx/conf.d/
-COPY nginx/sites-enabled/www.conf /etc/nginx/sites-enabled/www.conf
+COPY nginx/sites-enabled/www. /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Composer & Statamic CLI
 COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer
@@ -84,10 +86,9 @@ EXPOSE 80
 
 WORKDIR /var/www/html
 
-RUN chown -R www-data:www-data /var/www
-RUN mkdir -p /run/php/
-RUN touch /run/php/php-fpm.sock
-RUN chown -R www-data:www-data /run/php/
+RUN mkdir -p /run/php/ && \
+    touch /run/php/php-fpm.sock && \
+    chown -R www-data:www-data /run/php/
 
 USER www-data
 
