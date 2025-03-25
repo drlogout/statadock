@@ -30,7 +30,7 @@ services:
 
 Both the `./site` directory and the `./.ssh` directory are mounted as volumes and must be owned by the `www-data` user (uid 33, gid 33).
 
-## Running with Docker Compose
+## Running with Docker **Compose**
 
 ```bash
 docker compose up -d
