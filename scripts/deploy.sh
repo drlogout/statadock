@@ -4,8 +4,12 @@
 
 cd /var/www/html || exit 1
 
-# Only pull if git access is available
-if git ls-remote --heads origin "$SITE_BRANCH" >/dev/null 2>&1; then
+# Configure git to use SSH with the first available private key
+SSH_KEY=$(find /var/www/.ssh -type f ! -name "*.pub" ! -name "known_hosts" ! -name "config" -print -quit)
+
+if [ -n "$SSH_KEY" ]; then
+    # Pull latest changes from the repository
+    export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no"
     /usr/bin/git pull origin "$SITE_BRANCH"
 fi
 
@@ -18,8 +22,8 @@ fi
     echo 'Restarting FPM...'; kill -USR2 $(pgrep -f "php-fpm${PHP_VERSION}") ) 9>/tmp/fpmlock
 
 # Generate APP_KEY
-if ! grep -q "APP_KEY=base64:" "/var/www/html/.env"; then
-    /usr/bin/php artisan key:generate
+if ! grep -q "APP_KEY=[\"']\?base64:" "/var/www/html/.env"; then
+    /usr/bin/php artisan key:generate --force
 fi
 
 /usr/bin/php artisan cache:clear
