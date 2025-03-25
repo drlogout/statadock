@@ -61,12 +61,11 @@ COPY php/fpm/pool.d/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 RUN mkdir -p /var/run/php
 
 # Nginx config
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/docker-conf /etc/nginx/docker-conf
 COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
 COPY nginx/mime.types /etc/nginx/mime.types
 COPY nginx/conf.d/ /etc/nginx/conf.d/
-COPY nginx/sites-available/default.conf /etc/nginx/sites-available/default
-RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/sites-enabled/* && rm -f /etc/nginx/sites-available/* 
     
 # Composer & Statamic CLI
 COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer
@@ -90,10 +89,14 @@ RUN mkdir -p /run/php/
 RUN touch /run/php/php-fpm.sock
 RUN chown -R www-data:www-data /run/php/
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
+    && chmod 0440 /etc/sudoers.d/www-data
 USER www-data
 
 RUN curl https://get.volta.sh | bash && \
-    /var/www/.volta/bin/volta install node@$NODE_VERSION
+/var/www/.volta/bin/volta install node@$NODE_VERSION
 
-# Start PHP-FPM and Nginx
-CMD ["/bin/bash", "-c", "php-fpm${PHP_VERSION} -R && sudo nginx -g 'daemon off;'"]
+ENTRYPOINT [ "/entrypoint.sh" ]
