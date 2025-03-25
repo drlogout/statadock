@@ -52,7 +52,7 @@ RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
 
 # PHP config
 COPY php/fpm/php.ini /etc/php/${PHP_VERSION}/fpm/php.ini
-COPY php/fpm/php${PHP_VERSION}-fpm.conf /etc/php/${PHP_VERSION}/fpm/php-fpm.conf
+COPY php/fpm/php-fpm.conf /etc/php/${PHP_VERSION}/fpm/php-fpm.conf
 COPY php/fpm/pool.d/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 RUN mkdir -p /var/run/php
 
