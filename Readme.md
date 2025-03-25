@@ -5,25 +5,25 @@ statadock is a docker image that contains everything needed to run a Statamic si
 ## Usage
 ```yml
 services:
-	statadock:
-		image: drlogout/statadock:8.2
-		ports:
-			- "8888:80"
-		volumes:
-			- ./site:/var/www/html
-			- ./.ssh:/var/www/.ssh  # Mount SSH keys for private repository access
-		environment:
-			- REVERSE_PROXY=false # Set to true if behind a reverse proxy
-			- NODE_VERSION=22.12  # (default: 22.14) Node.js version
+  statadock:
+    image: drlogout/statadock:8.2
+    ports:
+      - "8888:80"
+    volumes:
+      - ./site:/var/www/html
+      - ./.ssh:/var/www/.ssh  # Mount SSH keys for private repository access
+    environment:
+      - REVERSE_PROXY=false # Set to true if behind a reverse proxy
+      - NODE_VERSION=22.12  # (default: 22.14) Node.js version
 
-			# Deploy
-			- SITE_BRANCH=main # Git pull is only run if a key is found in /var/www/.ssh
+      # Deploy
+      - SITE_BRANCH=main # Git pull is only run if a key is found in /var/www/.ssh
 
-			# Optional
-			- RESTART_REVERB=false    # Set to true to restart Laravel Reverb
-			- UPDATE_STATIC_CACHE=true # Set to true to rebuild static cache
-			- UPDATE_SEARCH=true      # Set to true to update search indices
-		restart: unless-stopped
+      # Optional
+      - RESTART_REVERB=false    # Set to true to restart Laravel Reverb
+      - UPDATE_STATIC_CACHE=true # Set to true to rebuild static cache
+      - UPDATE_SEARCH=true      # Set to true to update search indices
+    restart: unless-**stopped
 ```
 
 ### Permissions
