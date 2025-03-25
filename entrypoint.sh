@@ -3,12 +3,10 @@
 # Check if REVERSE_PROXY is set to true
 if [ "$REVERSE_PROXY" = "true" ]; then
     echo "Using reverse proxy configuration..."
-    sudo cp /etc/nginx/docker-conf/default.rp.conf /etc/nginx/sites-enabled/default
-    sudo cp /etc/nginx/docker-conf/nginx.rp.conf /etc/nginx/nginx.conf
+    sudo ln -s /etc/nginx/sites-available/default.reverse-proxy.conf /etc/nginx/sites-enabled/default
 else
     echo "Using standard configuration..."
-    sudo cp /etc/nginx/docker-conf/default.conf /etc/nginx/sites-enabled/default
-    sudo cp /etc/nginx/docker-conf/nginx.conf /etc/nginx/nginx.conf
+    sudo ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default
 fi
 
 # Start PHP-FPM in the background

@@ -61,11 +61,12 @@ COPY php/fpm/pool.d/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 RUN mkdir -p /var/run/php
 
 # Nginx config
-COPY nginx/docker-conf /etc/nginx/docker-conf
+RUN rm -f /etc/nginx/sites-enabled/* && rm -f /etc/nginx/sites-available/* 
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/sites-available/ /etc/nginx/sites-available/
 COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
 COPY nginx/mime.types /etc/nginx/mime.types
 COPY nginx/conf.d/ /etc/nginx/conf.d/
-RUN rm -f /etc/nginx/sites-enabled/* && rm -f /etc/nginx/sites-available/* 
     
 # Composer & Statamic CLI
 COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer

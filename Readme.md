@@ -3,6 +3,14 @@
 statadock is a docker image that contains everything needed to run a Statamic site.
 
 ## Usage
+
+### Reverse Proxy Support
+
+The container can be configured to run behind a reverse proxy (like Traefik, Nginx, or Cloudflare) by setting `REVERSE_PROXY=true`. This:
+- Properly handles forwarded HTTPS requests
+- Respects X-Forwarded-* headers
+- Ensures correct SSL/HTTPS detection in your application
+
 ```yml
 services:
   statadock:
@@ -23,7 +31,7 @@ services:
       - RESTART_REVERB=false    # Set to true to restart Laravel Reverb
       - UPDATE_STATIC_CACHE=true # Set to true to rebuild static cache
       - UPDATE_SEARCH=true      # Set to true to update search indices
-    restart: unless-**stopped
+    restart: unless-stopped
 ```
 
 ### Permissions
