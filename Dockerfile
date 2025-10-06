@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG PHP_VERSION=8.2
+ARG PHP_VERSION=8.3
 ARG NODE_VERSION=22.14
 ENV PHP_VERSION=${PHP_VERSION}
 ENV NODE_VERSION=${NODE_VERSION}
@@ -14,6 +14,7 @@ RUN apt update --fix-missing && \
     add-apt-repository ppa:ondrej/php && \
     apt install -y \
         git \
+        gosu \
         nginx \
         php${PHP_VERSION} \
         php${PHP_VERSION}-bcmath \
@@ -46,10 +47,6 @@ RUN apt update --fix-missing && \
         zip && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
-
-# Ensure www-data has UID 33 and GID 33
-RUN usermod -u 33 www-data && \
-    groupmod -g 33 www-data
 
 RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
     && chmod 0440 /etc/sudoers.d/www-data
@@ -95,9 +92,13 @@ RUN chmod +x /entrypoint.sh
 
 RUN echo www-data ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/www-data \
     && chmod 0440 /etc/sudoers.d/www-data
+
 USER www-data
 
 RUN curl https://get.volta.sh | bash && \
 /var/www/.volta/bin/volta install node@$NODE_VERSION
+
+# Switch back to root for entrypoint to handle user/group setup
+USER root
 
 ENTRYPOINT [ "/entrypoint.sh" ]
