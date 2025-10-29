@@ -31,7 +31,7 @@ else
 fi
 
 # Start PHP-FPM in the background (runs as root, drops to www-data)
-php-fpm${PHP_VERSION} -F -R &
+php-fpm${PHP_VERSION} -F &
 
 # Start nginx in foreground (runs as root, worker processes as www-data)
 exec nginx -g 'daemon off;' 

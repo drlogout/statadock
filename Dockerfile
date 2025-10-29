@@ -5,6 +5,9 @@ ARG NODE_VERSION=22.14
 ENV PHP_VERSION=${PHP_VERSION}
 ENV NODE_VERSION=${NODE_VERSION}
 
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 # Set timezone to UTC
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -13,6 +16,8 @@ RUN apt update --fix-missing && \
     apt install -y software-properties-common && \
     add-apt-repository ppa:ondrej/php && \
     apt install -y \
+        chromium \
+        chromium-driver \
         git \
         gosu \
         nginx \
@@ -68,7 +73,9 @@ COPY nginx/conf.d/ /etc/nginx/conf.d/
 # Composer & Statamic CLI
 COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer
 RUN echo "PATH=/root/.config/composer/vendor/bin:$PATH" >> /root/.bashrc
-RUN composer global require statamic/cli
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_PROCESS_TIMEOUT=600
+RUN composer global require statamic/cli --no-plugins --no-scripts --prefer-dist
 
 # Scripts
 COPY scripts/statamic.sh /usr/local/bin/statamic
