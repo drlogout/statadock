@@ -8,18 +8,15 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      php_versions:
-        description: 'PHP versions to build (comma-separated)'
-        required: false
-        default: '8.2,8.3'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php_version: ['8.2', '8.3']
+        php_version: 
+          # - '8.2'
+          - '8.3'
     
     permissions:
       contents: read
