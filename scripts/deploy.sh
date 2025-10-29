@@ -70,6 +70,13 @@ export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no"
 
 log_info "Processing branch: $BRANCH"
 
+# Fetch from remote to get latest branch information
+log_info "Fetching from remote..."
+if ! /usr/bin/git fetch origin '+refs/heads/*:refs/remotes/origin/*'; then
+    log_error "Error: Failed to fetch from remote"
+    exit 1
+fi
+
 # Clean working directory before switching branches
 # This ensures we can switch branches even if there are local changes
 log_info "Cleaning working directory (discarding any local changes)..."
