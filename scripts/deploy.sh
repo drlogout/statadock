@@ -66,11 +66,11 @@ fi
 
 cd /var/www/html || exit 1
 
-# Configure git to trust the repository directory
-/usr/bin/git config --global --add safe.directory /var/www/html
+# Configure git to trust the repository directory (local config to avoid permission issues)
+/usr/bin/git config --local --add safe.directory /var/www/html
 
-# Configure git pull strategy to avoid divergent branches error
-/usr/bin/git config pull.rebase false
+# Configure git pull strategy to avoid divergent branches error (local config)
+/usr/bin/git config --local pull.rebase false
 
 export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no"
 
