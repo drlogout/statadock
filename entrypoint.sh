@@ -19,6 +19,12 @@ if [ -n "${USER_ID:-}" ] && [ -n "${GROUP_ID:-}" ]; then
     
     # Update ownership of directories
     chown -R www-data:www-data /var/www /run/php
+
+    log_info "Starting PHP-FPM in the background as www-data..."
+    gosu www-data php-fpm${PHP_VERSION} -F &
+else
+    log_info "Starting PHP-FPM in the background as root..."
+    php-fpm${PHP_VERSION} -F &
 fi
 
 # Check if REVERSE_PROXY is set to true
@@ -29,9 +35,6 @@ else
     echo "Using standard configuration..."
     ln -sf /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default
 fi
-
-# Start PHP-FPM in the background
-gosu www-data php-fpm${PHP_VERSION} -F &
 
 # Start nginx in foreground (runs as root, worker processes as www-data)
 exec nginx -g 'daemon off;' 
