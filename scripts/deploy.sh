@@ -138,8 +138,15 @@ if ! CI=true npm_config_yes=true /var/www/.volta/bin/volta run --node "$NODE_VER
     exit 1
 fi
 
+log_info "Restarting PHP-FPM..."
 ( flock -w 10 9 || exit 1
-    echo 'Restarting FPM...'; kill -USR2 $(pgrep -f "php-fpm${PHP_VERSION}") ) 9>/tmp/fpmlock
+    FPM_PID=$(pgrep -f "php-fpm${PHP_VERSION}" | head -n 1)
+    if [ -n "$FPM_PID" ]; then
+        kill -USR2 "$FPM_PID" && echo "FPM restarted successfully"
+    else
+        echo "Warning: PHP-FPM process not found, skipping restart"
+    fi
+) 9>/tmp/fpmlock
 
 # Generate APP_KEY
 if ! grep -q "APP_KEY=[\"']\?base64:" "/var/www/html/.env"; then
