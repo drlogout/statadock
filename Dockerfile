@@ -21,6 +21,7 @@ RUN apt update --fix-missing && \
         git \
         gosu \
         nginx \
+        pcregrep \
         php${PHP_VERSION} \
         php${PHP_VERSION}-bcmath \
         php${PHP_VERSION}-cli \

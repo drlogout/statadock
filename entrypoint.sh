@@ -30,8 +30,8 @@ else
     ln -sf /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default
 fi
 
-# Start PHP-FPM in the background (runs as root, drops to www-data)
-php-fpm${PHP_VERSION} -F &
+# Start PHP-FPM in the background
+gosu www-data php-fpm${PHP_VERSION} -F &
 
 # Start nginx in foreground (runs as root, worker processes as www-data)
 exec nginx -g 'daemon off;' 
