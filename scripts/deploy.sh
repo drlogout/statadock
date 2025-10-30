@@ -138,13 +138,27 @@ if ! CI=true npm_config_yes=true /var/www/.volta/bin/volta run --node "$NODE_VER
     exit 1
 fi
 
-log_info "Restarting PHP-FPM..."
+log_info "Reloading PHP-FPM..."
 ( flock -w 10 9 || exit 1
-    FPM_PID=$(pgrep -f "php-fpm${PHP_VERSION}" | head -n 1)
-    if [ -n "$FPM_PID" ]; then
-        kill -USR2 "$FPM_PID" && echo "FPM restarted successfully"
+    FPM_MASTER_PID=$(pgrep -f php-fpm | head -n 1)
+    if [ -n "$FPM_MASTER_PID" ]; then
+        if kill -USR2 "$FPM_MASTER_PID" 2>/dev/null; then
+            log_info "FPM workers reloaded successfully"
+        else
+            log_error "Failed to reload FPM"
+            exit 1
+        fi
     else
-        echo "Warning: PHP-FPM process not found, skipping restart"
+        log_warning "PHP-FPM not running, attempting to start..."
+        php-fpm${PHP_VERSION} -F >/dev/null 2>&1 &
+        FPM_START_PID=$!
+        sleep 1
+        if kill -0 "$FPM_START_PID" 2>/dev/null; then
+            log_info "PHP-FPM started successfully (PID: $FPM_START_PID)"
+        else
+            log_error "Failed to start PHP-FPM"
+            exit 1
+        fi
     fi
 ) 9>/tmp/fpmlock
 
