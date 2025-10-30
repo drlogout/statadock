@@ -72,7 +72,7 @@ cd /var/www/html || exit 1
 # Configure git pull strategy to avoid divergent branches error (local config)
 /usr/bin/git config --local pull.rebase false
 
-export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no"
+export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 log_info "Processing branch: $BRANCH"
 
