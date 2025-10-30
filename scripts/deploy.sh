@@ -121,7 +121,7 @@ log_info "Local branch now matches remote origin/$BRANCH"
 rm -rf bootstrap/cache/*.php
 
 log_info "Installing Composer dependencies..."
-if ! /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev; then
+if ! /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-progress; then
     log_error "Failed to install Composer dependencies"
     exit 1
 fi
