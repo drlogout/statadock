@@ -120,19 +120,27 @@ log_info "Local branch now matches remote origin/$BRANCH"
 # Clear Laravel caches before composer install to prevent stale cache issues
 rm -rf bootstrap/cache/*.php
 
-# Generate APP_KEY
+log_info "Installing Composer dependencies..."
+if ! /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-progress; then
+    log_error "Failed to install Composer dependencies"
+    exit 1
+fi
+
+# Generate APP_KEY after composer install
 if ! grep -q "APP_KEY=[\"']\?base64:" "/var/www/html/.env"; then
+    log_info "Setting up APP_KEY..."
+    # Set placeholder if APP_KEY is missing or empty (Laravel needs something to boot)
+    if ! grep -q "^APP_KEY=" "/var/www/html/.env" || grep -q "^APP_KEY=$" "/var/www/html/.env"; then
+        log_info "Adding placeholder APP_KEY to .env..."
+        sed -i 's/^APP_KEY=.*/APP_KEY=base64:placeholder/' "/var/www/html/.env" || \
+        echo "APP_KEY=base64:placeholder" >> "/var/www/html/.env"
+    fi
+    
     log_info "Generating APP_KEY..."
     if ! /usr/bin/php artisan key:generate --force; then
         log_error "Failed to generate APP_KEY"
         exit 1
     fi
-fi
-
-log_info "Installing Composer dependencies..."
-if ! /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-progress; then
-    log_error "Failed to install Composer dependencies"
-    exit 1
 fi
 
 log_info "Installing NPM dependencies..."
