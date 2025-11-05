@@ -180,7 +180,7 @@ log_info "Reloading PHP-FPM..."
 
 # Call the cache clearing script
 log_info "Running cache clearing script..."
-/usr/local/bin/deploy/clear-cache
+/usr/local/bin/clear-cache
 
 # Restart horizon
 if /usr/bin/php artisan horizon:status >/dev/null 2>&1; then
