@@ -16,6 +16,16 @@ log_warning() {
     echo "[WARNING] $1"
 }
 
+get_github_token() {
+    local auth_file="/var/www/html/auth.json"
+
+    if [ ! -f "$auth_file" ]; then
+        return ""
+    fi
+
+    return $(jq -r '.["github-oauth"]["github.com"]' "$auth_file" 2>/dev/null)
+}
+
 # Default values
 SSH_KEY=/root/.ssh/id_rsa
 BRANCH="main"
@@ -73,6 +83,7 @@ cd /var/www/html || exit 1
 /usr/bin/git config --local pull.rebase false
 
 export GIT_SSH_COMMAND="ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+export GITHUB_TOKEN=$(get_github_token)
 
 log_info "Processing branch: $BRANCH"
 
