@@ -117,7 +117,7 @@ fi
 
 log_info "Local branch now matches remote origin/$BRANCH"
 
-# Clear Laravel caches before composer install to prevent stale cache issues
+# Clear initial cache files before composer install to prevent stale cache issues
 rm -rf bootstrap/cache/*.php
 
 # Generate APP_KEY before composer install (composer runs package:discover which needs it)
@@ -125,14 +125,14 @@ if ! grep -q "APP_KEY=[\"']\?base64:" "/var/www/html/.env"; then
     log_info "Generating APP_KEY with openssl..."
     # Generate a proper Laravel APP_KEY: base64-encoded 32 random bytes
     APP_KEY="base64:$(openssl rand -base64 32)"
-    
+
     # Update or add APP_KEY in .env
     if grep -q "^APP_KEY=" "/var/www/html/.env" 2>/dev/null; then
         sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" "/var/www/html/.env"
     else
         echo "APP_KEY=${APP_KEY}" >> "/var/www/html/.env"
     fi
-    
+
     log_info "APP_KEY generated successfully"
 fi
 
@@ -178,26 +178,9 @@ log_info "Reloading PHP-FPM..."
     fi
 ) 9>/tmp/fpmlock
 
-log_info "Clearing Laravel caches..."
-if ! /usr/bin/php artisan cache:clear; then
-    log_error "Failed to clear cache"
-    exit 1
-fi
-
-if ! /usr/bin/php artisan optimize:clear; then
-    log_error "Failed to clear optimized files"
-    exit 1
-fi
-
-if ! /usr/bin/php artisan config:cache; then
-    log_error "Failed to cache configuration"
-    exit 1
-fi
-
-if ! /usr/bin/php artisan route:cache; then
-    log_error "Failed to cache routes"
-    exit 1
-fi
+# Call the cache clearing script
+log_info "Running cache clearing script..."
+/usr/local/bin/deploy/clear-cache
 
 # Restart horizon
 if /usr/bin/php artisan horizon:status >/dev/null 2>&1; then
@@ -214,36 +197,5 @@ if [ "${RESTART_REVERB:-false}" = "true" ]; then
         log_warning "Failed to restart Reverb (non-critical)"
     fi
 fi
-
-# Static cache:
-if [ "${UPDATE_STATIC_CACHE:-false}" = "true" ]; then
-    log_info "Updating static cache..."
-    if ! /usr/bin/php artisan statamic:static:clear; then
-        log_error "Failed to clear static cache"
-        exit 1
-    fi
-    if ! /usr/bin/php artisan statamic:static:warm --queue; then
-        log_error "Failed to warm static cache"
-        exit 1
-    fi
-fi
-
-# Search
-if [ "${UPDATE_SEARCH:-false}" = "true" ]; then
-    log_info "Updating search index..."
-    if ! /usr/bin/php artisan statamic:stache:warm; then
-        log_error "Failed to warm stache"
-        exit 1
-    fi
-    if ! /usr/bin/php artisan statamic:search:update --all; then
-        log_error "Failed to update search index"
-        exit 1
-    fi
-fi
-
-# otherwise we get this error:
-# [2025-10-07 17:04:29] staging.ERROR: Call to undefined method Statamic\Sites\Site::__set_state() {"exception":"[object] (Error(code: 0): Call to undefined method Statamic\\Sites\\Site::__set_state() at /var/www/html/bootstrap/cache/routes-v7.php:10537)
-# [stacktrace]
-rm -f bootstrap/cache/routes-v7.php
 
 log_info "Deployment completed successfully!"
