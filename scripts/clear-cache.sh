@@ -19,22 +19,22 @@ log_warning() {
 log_info "Running 'rm -rf bootstrap/cache/*.php'"
 rm -rf bootstrap/cache/*.php
 
-log_info "'Running artisan cache:clear'"
+log_info "Running 'artisan cache:clear'"
 if ! /usr/bin/php artisan cache:clear; then
     log_error "artisan cache:clear failed"
 fi
 
-log_info "'Running artisan optimize:clear'"
+log_info "Running 'artisan optimize:clear'"
 if ! /usr/bin/php artisan optimize:clear; then
     log_error "optimized:clear failed"
 fi
 
-log_info "'Running artisan config:cache'"
+log_info "Running 'artisan config:cache'"
 if ! /usr/bin/php artisan config:cache; then
     log_error "config:cache failed"
 fi
 
-log_info "'Running artisan route:cache'"
+log_info "Running 'artisan route:cache'"
 if ! /usr/bin/php artisan route:cache; then
     log_error "route:cache failed"
 fi
@@ -62,5 +62,5 @@ if [ "${UPDATE_SEARCH:-false}" = "true" ]; then
 fi
 
 # Clean up routes cache file to prevent Site::__set_state() error
-log_info "'Running rm -f bootstrap/cache/routes-v7.php'"
+log_info "Running 'rm -f bootstrap/cache/routes-v7.php'"
 rm -f bootstrap/cache/routes-v7.php
