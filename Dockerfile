@@ -46,6 +46,7 @@ RUN apt update --fix-missing && \
     php${PHP_VERSION}-sqlite3 \
     php${PHP_VERSION}-xml \
     php${PHP_VERSION}-zip \
+    jq \
     sudo \
     rsync \
     unzip \

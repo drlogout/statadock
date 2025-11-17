@@ -20,10 +20,11 @@ get_github_token() {
     local auth_file="/var/www/html/auth.json"
 
     if [ ! -f "$auth_file" ]; then
-        return ""
+        echo ""
+        return
     fi
 
-    return $(jq -r '.["github-oauth"]["github.com"]' "$auth_file" 2>/dev/null)
+    jq -r '.["github-oauth"]["github.com"]' "$auth_file" 2>/dev/null
 }
 
 # Default values
