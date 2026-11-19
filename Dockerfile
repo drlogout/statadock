@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 ARG PHP_VERSION=8.3
-ARG NODE_VERSION=22.14
+ARG NODE_VERSION=22.23
 ENV PHP_VERSION=${PHP_VERSION}
 ENV NODE_VERSION=${NODE_VERSION}
 
@@ -12,9 +12,18 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# nginx from the official nginx.org stable repo (Ubuntu's 1.24 is affected by
+# nginx2root / CVE-2026-123007 et al., fixed in 1.30.7 / 1.31.9).
+# PHP from ppa:ondrej/php. apt upgrade pulls in all pending security fixes
+# of the base image.
 RUN apt update --fix-missing && \
-    apt install -y software-properties-common && \
-    add-apt-repository ppa:ondrej/php && \
+    apt install -y --no-install-recommends ca-certificates curl gnupg software-properties-common && \
+    add-apt-repository -y ppa:ondrej/php && \
+    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o /usr/share/keyrings/nginx-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu noble nginx" > /etc/apt/sources.list.d/nginx.list && \
+    printf "Package: *\nPin: origin nginx.org\nPin-Priority: 900\n" > /etc/apt/preferences.d/99nginx && \
+    apt update && \
+    apt upgrade -y && \
     apt install -y \
     chromium \
     chromium-driver \
@@ -65,7 +74,10 @@ COPY php/fpm/pool.d/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 RUN mkdir -p /var/run/php
 
 # Nginx config
-RUN rm -f /etc/nginx/sites-enabled/* && rm -f /etc/nginx/sites-available/*
+RUN rm -f /etc/nginx/conf.d/default.conf && \
+    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled && \
+    rm -f /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* && \
+    mkdir -p /var/cache/nginx && chown -R www-data:www-data /var/cache/nginx
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/sites-available/ /etc/nginx/sites-available/
 COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
@@ -73,7 +85,7 @@ COPY nginx/mime.types /etc/nginx/mime.types
 COPY nginx/conf.d/ /etc/nginx/conf.d/
 
 # Composer & Statamic CLI
-COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.11 /usr/bin/composer /usr/bin/composer
 RUN echo "PATH=/root/.config/composer/vendor/bin:$PATH" >> /root/.bashrc
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=600

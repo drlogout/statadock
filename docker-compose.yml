@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - PHP_VERSION=8.3
-      - NODE_VERSION=22.14
+      - NODE_VERSION=22.23
       - REVERSE_PROXY=false
       - USER_ID=1000
       - GROUP_ID=1000

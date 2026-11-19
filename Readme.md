@@ -22,7 +22,7 @@ services:
       - ./.ssh:/var/www/.ssh  # Mount SSH keys for private repository access
     environment:
       - REVERSE_PROXY=false # Set to true if behind a reverse proxy
-      - NODE_VERSION=22.12  # (default: 22.14) Node.js version
+      - NODE_VERSION=22.12  # (default: 22.23) Node.js version
 
       # Deploy
       - SITE_BRANCH=main # Git pull is only run if a key is found in /var/www/.ssh
