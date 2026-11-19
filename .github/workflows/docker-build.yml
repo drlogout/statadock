@@ -64,6 +64,7 @@ jobs:
             PHP_VERSION=${{ matrix.php_version }}
             NODE_VERSION=22.23
           pull: true
-          no-cache: ${{ github.event_name == 'schedule' }}
+          # Scheduled and manual runs skip the cache so apt picks up new PHP/nginx packages
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
