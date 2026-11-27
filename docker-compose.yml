@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - PHP_VERSION=8.3
+      - PHP_VERSION=8.4
       - NODE_VERSION=22.23
       - REVERSE_PROXY=false
       - USER_ID=1000
