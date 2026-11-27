@@ -2,6 +2,25 @@
 
 statadock is a docker image that contains everything needed to run a Statamic site.
 
+## Image tags
+
+Images are published to `ghcr.io/drlogout/statadock`:
+
+| Tag | PHP | Updated |
+| --- | --- | --- |
+| `php8.4-<n>` (e.g. `php8.4-1`) | 8.4 | never: built once from the git tag of the same name. Pin this in deployments. |
+| `8.4`, `latest` | 8.4 | on every push to `main` and weekly (security updates) |
+| `8.3` | 8.3 | on every push to `main` and weekly (security updates) |
+
+To publish a new fixed release, tag the commit on `main` and push the tag:
+
+```bash
+git tag php8.4-2
+git push origin php8.4-2
+```
+
+The workflow refuses to overwrite a release tag that already exists in the registry.
+
 ## Usage
 
 ### Reverse Proxy Support
@@ -14,7 +33,7 @@ The container can be configured to run behind a reverse proxy (like Traefik, Ngi
 ```yml
 services:
   statadock:
-    image: drlogout/statadock:8.2
+    image: ghcr.io/drlogout/statadock:php8.4-1
     ports:
       - "8888:80"
     volumes:

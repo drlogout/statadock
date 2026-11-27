@@ -1,9 +1,18 @@
 name: Build Docker Images
 
+# Published tags (ghcr.io/drlogout/statadock):
+#   latest          newest PHP version, rebuilt on every push to main and weekly (mutable)
+#   8.4, 8.3        per PHP version, rebuilt on every push to main and weekly (mutable)
+#   php8.4-<n>      fixed release, built once when the git tag php8.4-<n> is pushed.
+#                   The job refuses to overwrite a fixed tag that already exists in the
+#                   registry, so pin this one in deployments.
+
 on:
   push:
     branches:
       - main
+    tags:
+      - 'php*.*-*'
   pull_request:
     branches:
       - main
@@ -12,19 +21,44 @@ on:
     # Weekly rebuild without cache to pick up PHP/nginx/Ubuntu security updates
     - cron: '0 4 * * 1'
 
+env:
+  LATEST_PHP_VERSION: '8.4'
+
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      php_versions: ${{ steps.versions.outputs.php_versions }}
+    steps:
+      - name: Select PHP versions
+        id: versions
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            # Release tag: php<major>.<minor>-<n>, build only that PHP version
+            if ! echo "$REF_NAME" | grep -Eq '^php[0-9]+\.[0-9]+-[0-9]+$'; then
+              echo "::error::Tag '$REF_NAME' does not match php<major>.<minor>-<n> (e.g. php8.4-1)"
+              exit 1
+            fi
+            version=$(echo "$REF_NAME" | sed -E 's/^php([0-9]+\.[0-9]+)-.*/\1/')
+            echo "php_versions=[\"$version\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo 'php_versions=["8.4", "8.3"]' >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php_version: 
-          - '8.3'
-          # - '8.2'
-    
+        php_version: ${{ fromJSON(needs.setup.outputs.php_versions) }}
+
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -43,14 +77,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to overwrite an existing release tag
+        if: github.ref_type == 'tag'
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        run: |
+          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "::error::$IMAGE already exists; release tags are immutable. Push a new tag (e.g. increase <n>)."
+            exit 1
+          fi
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=${{ matrix.php_version }}
-            type=raw,value=latest,enable=${{ matrix.php_version == '8.3' }}
+            type=raw,value=${{ matrix.php_version }},enable=${{ github.ref_type != 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type != 'tag' && matrix.php_version == env.LATEST_PHP_VERSION }}
+            type=ref,event=tag
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -64,7 +111,7 @@ jobs:
             PHP_VERSION=${{ matrix.php_version }}
             NODE_VERSION=22.23
           pull: true
-          # Scheduled and manual runs skip the cache so apt picks up new PHP/nginx packages
-          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Scheduled, manual and release runs skip the cache so apt picks up new PHP/nginx packages
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' }}
+          cache-from: type=gha,scope=php${{ matrix.php_version }}
+          cache-to: type=gha,mode=max,scope=php${{ matrix.php_version }}
